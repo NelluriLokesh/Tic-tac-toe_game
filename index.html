@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag-and-Drop Tic-Tac-Toe</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            border: 2px solid #000;
+            font-size: 2em;
+            cursor: pointer;
+        }
+
+        .draggable {
+            width: 100px;
+            height: 100px;
+            cursor: grab;
+        }
+
+        #pieces {
+            display: flex;
+            gap: 10px;
+        }
+
+        .exit-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .restart-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <button class="exit-button" onclick="goBack()">Exit Game</button>
+    <h1>Drag-and-Drop Tic-Tac-Toe</h1>
+    <div id="game-board">
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+        <div class="cell" data-cell></div>
+    </div>
+    <div id="pieces">
+        <img src="pic/x.png" id="x-piece" class="draggable" draggable="true">
+        <img src="pic/o.png" id="o-piece" class="draggable" draggable="true">
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = document.querySelectorAll('[data-cell]');
+            const xPiece = document.getElementById('x-piece');
+            const oPiece = document.getElementById('o-piece');
+            let currentPlayer = 'x';
+
+            cells.forEach(cell => {
+                cell.addEventListener('dragover', dragOver);
+                cell.addEventListener('drop', drop);
+            });
+
+            xPiece.addEventListener('dragstart', dragStart);
+            oPiece.addEventListener('dragstart', dragStart);
+
+            function dragStart(e) {
+                e.dataTransfer.setData('text/plain', e.target.id);
+            }
+
+            function dragOver(e) {
+                e.preventDefault();
+            }
+
+            function drop(e) {
+                e.preventDefault();
+                const pieceId = e.dataTransfer.getData('text/plain');
+                const piece = document.getElementById(pieceId);
+                const clone = piece.cloneNode(true);
+                clone.removeAttribute('id');
+                e.target.appendChild(clone);
+
+                // Check for win condition after placing the piece
+                if (checkWin()) {
+                    alert(`${currentPlayer.toUpperCase()} Wins!`);
+                    resetGame();
+                    return;
+                }
+
+                // Check for draw condition
+                if (checkDraw()) {
+                    alert("It's a Draw!");
+                    resetGame();
+                    return;
+                }
+
+                // Alternate turns
+                currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
+            }
+
+            function checkWin() {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                    [0, 4, 8], [2, 4, 6]             // Diagonals
+                ];
+
+                return winPatterns.some(pattern => {
+                    const [a, b, c] = pattern;
+                    const cellA = cells[a].firstElementChild;
+                    const cellB = cells[b].firstElementChild;
+                    const cellC = cells[c].firstElementChild;
+
+                    if (cellA && cellB && cellC) {
+                        return (
+                            cellA.src.includes(currentPlayer + '.png') &&
+                            cellB.src.includes(currentPlayer + '.png') &&
+                            cellC.src.includes(currentPlayer + '.png')
+                        );
+                    }
+
+                    return false;
+                });
+            }
+
+            function checkDraw() {
+                return [...cells].every(cell => cell.firstElementChild !== null);
+            }
+
+            function resetGame() {
+                cells.forEach(cell => {
+                    if (cell.firstElementChild) {
+                        cell.removeChild(cell.firstElementChild);
+                    }
+                });
+                currentPlayer = 'x';
+            }
+
+            function goBack() {
+                window.history.back();
+            }
+        });
+    </script>
+</body>
+</html>
